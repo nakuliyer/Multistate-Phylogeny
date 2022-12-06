@@ -4,7 +4,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
-def draw_graph(T: nx.DiGraph):
+def draw_graph_f(T: nx.DiGraph):
     pos = nx.spring_layout(T)
     edge_labels = nx.get_edge_attributes(T, 'label')
     nx.draw(T, pos, with_labels=True)
@@ -52,7 +52,7 @@ def two_state_phylo(M: np.ndarray, draw_graph=False) -> bool:
             return False
 
     if draw_graph:
-        draw_graph(T)
+        draw_graph_f(T)
     return True
         
 
