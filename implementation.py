@@ -1,13 +1,14 @@
-from typing import Set
-import numpy as np
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+from typing import Set
 
+from utilities import hierarchy_pos
 
 def draw_graph(T: nx.DiGraph):
     """Draws a tree"""
     
-    pos = nx.planar_layout(T)
+    pos = hierarchy_pos(T, "r0")
     edge_labels = nx.get_edge_attributes(T, 'label')
     labeldict = {}
     for node in T.nodes:
@@ -34,7 +35,7 @@ def extend_tree_by_row(T: nx.DiGraph, charset: Set[int], taxum_idx: int, taxum_c
     edits = set(np.flatnonzero(taxum_chars)) # all the edits made by this taxum 
     additions = []
 
-    curr = "r_0"
+    curr = "r0"
     edit_found = True
     while edit_found:
         edit_found = False
@@ -67,7 +68,7 @@ def two_state_phylo(M: np.ndarray, draw=False) -> nx.DiGraph:
     charset = set(range(len(M[0])))
 
     T = nx.DiGraph()
-    T.add_node("r_0")
+    T.add_node("r0")
 
     for taxum_idx in taxa_order:
         if not extend_tree_by_row(T, charset, taxum_idx, M[taxum_idx]):
@@ -119,7 +120,7 @@ def three_state_phylo(M: np.ndarray, draw=False) -> nx.DiGraph:
                         char_2s = int(d["label"][1:]) - 1
                         char = char_2s // 2 + 1
                         edit = char_2s % 2 + 1
-                        d["label"] = "c" + str(char) + " to " + str(edit)
+                        d["label"] = "c" + str(char) + " -> " + str(edit)
                 draw_graph(T)
             return T
     return None
