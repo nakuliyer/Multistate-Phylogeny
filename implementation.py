@@ -20,14 +20,13 @@ def draw_graph(T: nx.DiGraph):
     nx.draw_networkx_edge_labels(T, pos, edge_labels=edge_labels)
     plt.show()
 
-def extend_tree_for_taxum(T: nx.DiGraph, M: np.ndarray, charset: Set[int], taxum_idx: int, char_order: np.array) -> bool:
+def extend_tree_for_taxum(T: nx.DiGraph, M: np.ndarray, taxum_idx: int) -> bool:
     """Extends a tree by a row
 
     Args:
         T (nx.DiGraph): tree
-        charset (Set[int]): set of characters available to use in extending the tree (i.e. not already used)
+        M (np.ndarray): matrix
         taxum_idx (int): an id for the taxa
-        taxum_chars (np.ndarray): the actual row of chars in the matrix corresponding to this taxa
 
     Returns:
         bool: true if the tree was able to be extended, false if the tree had a conflict
@@ -46,12 +45,13 @@ def extend_tree_for_taxum(T: nx.DiGraph, M: np.ndarray, charset: Set[int], taxum
                 edits = np.delete(edits, np.where(edits == data["edit"]))
                 break
     
+    # Get all the edits already used in T (i.e. all the edge-labels of T)
+    edits_already_made = set(map(lambda x: x[2], T.edges.data("edit")))
+    
     for edit in edits:
-        if edit not in charset:
+        if edit in edits_already_made:
             return False # collision condition
-        charset.remove(edit)
-        label = "c" + str(char_order[edit] + 1)
-        T.add_edge(curr, "i" + str(edit), label=label, edit=edit)
+        T.add_edge(curr, "i" + str(edit), edit=edit)
         curr = "i" + str(edit)
     if len(edits):
         T.add_edge("i" + str(edits[-1]), "r" + str(taxum_idx + 1), edit=-1)
@@ -68,22 +68,37 @@ def sort_characters(M: np.ndarray) -> Tuple[np.ndarray, np.array]:
     char_order = num_edits.argsort()[::-1]
     M = M[:, char_order]
     return M, char_order
-    
 
-def two_state_phylo(M: np.ndarray, draw=False) -> nx.DiGraph:
-    """Determines whether matrix M accepts a perfect two-state phylogeny"""
-    M, char_order = sort_characters(M)
-    charset = set(range(len(M[0])))
 
+def two_state_sorted_phylo(M: np.ndarray) -> nx.DiGraph:
+    """Determines whether matrix M (with columns pre-sorted in descneding by number of 1s) accepts a perfect two-state phylogeny
+
+    Args:
+        M (np.ndarray): matrix
+
+    Returns:
+        nx.DiGraph: tree is perfect phylogeny exists, else None
+    """
     T = nx.DiGraph()
     T.add_node("r0")
 
     num_taxa = M.shape[0]
     for taxum_idx in range(num_taxa):
-        if not extend_tree_for_taxum(T, M, charset, taxum_idx, char_order):
+        if not extend_tree_for_taxum(T, M, taxum_idx):
             return None
+    return T
+    
+
+def two_state_phylo(M: np.ndarray, draw=False) -> nx.DiGraph:
+    """Determines whether matrix M accepts a perfect two-state phylogeny"""
+    M, char_order = sort_characters(M)
+    T = two_state_sorted_phylo(M)
 
     if draw:
+        for _, _, d in T.edges(data=True):
+            edit = d["edit"]
+            if edit != -1:
+                d["label"] = "c" + str(char_order[edit] + 1)
         draw_graph(T)
     return T
         
@@ -121,13 +136,14 @@ def three_state_phylo(M: np.ndarray, draw=False) -> nx.DiGraph:
                 elif cladistic_char_tree == 2:
                     M_2s[taxum_idx][2 * char_idx] = int(char == 1)
                     M_2s[taxum_idx][2 * char_idx + 1] = int(char == 2)
-        T = two_state_phylo(M_2s)
+        M_2s, char_order = sort_characters(M_2s)
+        T = two_state_sorted_phylo(M_2s)
         if T:
             if draw:
                 for _, _, d in T.edges(data=True):
-                    if "label" in d:
+                    if d["edit"] != -1:
                         char_2s = int(d["label"][1:]) - 1
-                        char = char_2s // 2 + 1
+                        char = char_order[char_2s // 2] + 1
                         edit = char_2s % 2 + 1
                         d["label"] = "c" + str(char) + " -> " + str(edit)
                 draw_graph(T)
