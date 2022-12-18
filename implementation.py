@@ -93,8 +93,7 @@ def two_state_phylo(M: np.ndarray, draw=False) -> nx.DiGraph:
     """Determines whether matrix M accepts a perfect two-state phylogeny"""
     M, char_order = sort_characters(M)
     T = two_state_sorted_phylo(M)
-
-    if draw:
+    if draw and T:
         for _, _, d in T.edges(data=True):
             edit = d["edit"]
             if edit != -1:
@@ -142,9 +141,9 @@ def three_state_phylo(M: np.ndarray, draw=False) -> nx.DiGraph:
             if draw:
                 for _, _, d in T.edges(data=True):
                     edit_2s = d["edit"]
-                    if edit != -1:
-                        char = char_order[edit_2s // 2] + 1
-                        edit = edit_2s % 2 + 1
+                    if edit_2s != -1:
+                        char = char_order[edit_2s] // 2 + 1
+                        edit = char_order[edit_2s] % 2 + 1
                         d["label"] = "c" + str(char) + " -> " + str(edit)
                 draw_graph(T)
             return T
