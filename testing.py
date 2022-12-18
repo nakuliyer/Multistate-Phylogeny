@@ -136,23 +136,31 @@ def add_char_3state(T: nx.DiGraph, d, satisfy):
         T.add_edge(temp, to_add[1], label=new_char + ": " + str(d[new_char]))
     else:
         r_idx = random.randint(0, len(leaves)-1)
-        path = nx.shortest_path(T, "r0", leaves[r_idx][1])
-        temp = []
-        for i in range(1, len(path)):
-            curr_data = T.get_edge_data(path[i-1], path[i])
-            if curr_data:
-                curr_label = curr_data["label"]
-                curr_char = curr_label[:curr_label.index(":")]
-                temp.append(curr_char)
-        for key, v in d.items():
-            if key not in temp:
-                to_add = leaves[r_idx]
-                temp1 = str(len(T.nodes()) + 1)
-                T.remove_edge(to_add[0], to_add[1])
-                T.add_edge(to_add[0], temp1, label=to_add[2]["label"])
-                print(d[key])
-                T.add_edge(temp1, to_add[1], label=key + ": " + str(d[key]))
-                break
+        to_add = leaves[r_idx]
+        char, count = random.choice(list(d.items()))
+        temp = str(len(T.nodes()) + 1)
+        T.remove_edge(to_add[0], to_add[1])
+        T.add_edge(to_add[0], temp, label=to_add[2]["label"])
+        T.add_edge(temp, to_add[1], label=char + ": " + str(count))
+
+        leaves = [item for item in T.edges().data() if item[1][0] == "r" and item[2]]
+        r_idx1 = random.randint(0, len(leaves)-1)
+        to_add1 = leaves[r_idx1]
+        char, count = random.choice(list(d.items()))
+        temp1 = str(len(T.nodes()) + 1)
+        T.remove_edge(to_add1[0], to_add1[1])
+        T.add_edge(to_add1[0], temp1, label=to_add1[2]["label"])
+        T.add_edge(temp1, to_add1[1], label=char + ": " + str(count))
+
+        leaves = [item for item in T.edges().data() if item[1][0] == "r" and item[2]]
+        r_idx2 = random.randint(0, len(leaves)-1)
+        to_add2 = leaves[r_idx2]
+        char, count = random.choice(list(d.items()))
+        temp2 = str(len(T.nodes()) + 1)
+        T.remove_edge(to_add2[0], to_add2[1])
+        T.add_edge(to_add2[0], temp2, label=to_add2[2]["label"])
+        T.add_edge(temp2, to_add2[1], label=char + ": " + str(count))
+
 def change_char_3state(T: nx.DiGraph, d):
     leaves = [item for item in T.edges().data() if item[1][0] == "r" and item[2]]
     r_idx = random.randint(0, len(leaves)-1)
@@ -190,8 +198,8 @@ def test_layered_3state(success):
     for i in range(5):
         add_char_3state(T, d, True)
         add_leaf_3state(T)
-        if i % 2 == 0:
-            change_char_3state(T, d)
+        #if i % 2 == 0:
+            #change_char_3state(T, d)
         
 
     if success:
@@ -205,7 +213,7 @@ def test_layered_3state(success):
 
 
 
-G, d = test_layered_3state(True)
+G, d = test_layered_3state(False)
 M = create_matrix(G, False, d)
 #draw_graph(G)
 print(M)
