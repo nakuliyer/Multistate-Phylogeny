@@ -193,14 +193,12 @@ def add_leaf_3state(T: nx.DiGraph):
     target = targets[random.randint(0, len(targets) - 1)]
     T.add_edge(target[0], new_leaf)
 
-def test_layered_3state(success):
+def test_layered_3state(success, changes):
     T, d = create_3state_base()
-    for i in range(5):
+    for i in range(changes):
         add_char_3state(T, d, True)
+        change_char_3state(T, d)
         add_leaf_3state(T)
-        #if i % 2 == 0:
-            #change_char_3state(T, d)
-        
 
     if success:
         add_char_3state(T, d, True)
@@ -212,9 +210,29 @@ def test_layered_3state(success):
     return T, d
 
 
+num_success = 0
+for i in range(2, 6): # generate various trees between 2-6 iterations of extensions
+    for j in range(25): # test each iteration 25 times
+        G, d = test_layered_3state(True, i)
+        M = create_matrix(G, False, d)
+        if three_state_phylo(M, False) != None:
+            num_success += 1 
+print(num_success)
 
-G, d = test_layered_3state(False)
-M = create_matrix(G, False, d)
+
+num_fail = 0
+for i in range(2, 6): # generate various trees between 2-6 iterations of extensions
+    for j in range(25): # test each iteration 25 times
+        G, d = test_layered_3state(False, i)
+        M = create_matrix(G, False, d)
+        if three_state_phylo(M, False) == None:
+            num_fail += 1 
+print(num_fail)
 #draw_graph(G)
-print(M)
-three_state_phylo(M, True)
+#M = create_matrix(G, True, None)
+#two_state_phylo(M, True)
+#draw_graph(G)
+#M = create_matrix(G, False, d)
+#draw_graph(G)
+#print(M)
+#three_state_phylo(M, True)
