@@ -20,7 +20,7 @@ def draw_graph(T: nx.DiGraph):
     nx.draw_networkx_edge_labels(T, pos, edge_labels=edge_labels)
     plt.show()
 
-def extend_tree_by_row(T: nx.DiGraph, charset: Set[int], taxum_idx: int, taxum_chars: np.ndarray) -> bool:
+def extend_tree_for_taxum(T: nx.DiGraph, M: np.ndarray, charset: Set[int], taxum_idx: int) -> bool:
     """Extends a tree by a row
 
     Args:
@@ -32,7 +32,7 @@ def extend_tree_by_row(T: nx.DiGraph, charset: Set[int], taxum_idx: int, taxum_c
     Returns:
         bool: true if the tree was able to be extended, false if the tree had a conflict
     """
-    edits = set(np.flatnonzero(taxum_chars)) # all the edits made by this taxum 
+    edits = set(np.flatnonzero(M[taxum_idx])) # all the edits made by this taxum 
     additions = []
 
     curr = "r0"
@@ -71,7 +71,7 @@ def two_state_phylo(M: np.ndarray, draw=False) -> nx.DiGraph:
     T.add_node("r0")
 
     for taxum_idx in taxa_order:
-        if not extend_tree_by_row(T, charset, taxum_idx, M[taxum_idx]):
+        if not extend_tree_for_taxum(T, M, charset, taxum_idx):
             return None
 
     if draw:
