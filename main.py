@@ -1,10 +1,6 @@
 from implementation import *
 
-M = np.array([[1, 1, 0, 0, 0], 
-              [0, 0, 1, 0, 0], 
-              [1, 1, 0, 0, 1], 
-              [0, 0, 1, 1, 0], 
-              [0, 1, 0, 0, 0]])
+M = np.loadtxt("sample_two_state_runs/m0.txt")
 print(two_state_phylo(M, draw=True))
 
 # M = np.array([[1, 1, 0, 0, 0], 
