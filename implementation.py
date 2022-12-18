@@ -60,7 +60,7 @@ def extend_tree_for_taxum(T: nx.DiGraph, M: np.ndarray, charset: Set[int], taxum
     return True
 
 
-def sort_characters(M: np.ndarray) -> Tuple[np.array, np.array]:
+def sort_characters(M: np.ndarray) -> Tuple[np.ndarray, np.array]:
     """Sorts the columns of matrix M out-of-place such that the sum of the values in each column
     is descending. Returns both the column-sorted matrix and an array indicating the ordering so that
     the original matrix may be recovered."""
