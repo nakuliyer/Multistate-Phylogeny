@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-from typing import Set
+from typing import Set, Tuple
 
 from utilities import hierarchy_pos
 
@@ -20,7 +20,7 @@ def draw_graph(T: nx.DiGraph):
     nx.draw_networkx_edge_labels(T, pos, edge_labels=edge_labels)
     plt.show()
 
-def extend_tree_for_taxum(T: nx.DiGraph, M: np.ndarray, charset: Set[int], taxum_idx: int) -> bool:
+def extend_tree_for_taxum(T: nx.DiGraph, M: np.ndarray, charset: Set[int], taxum_idx: int, char_order: np.array) -> bool:
     """Extends a tree by a row
 
     Args:
@@ -32,8 +32,7 @@ def extend_tree_for_taxum(T: nx.DiGraph, M: np.ndarray, charset: Set[int], taxum
     Returns:
         bool: true if the tree was able to be extended, false if the tree had a conflict
     """
-    edits = set(np.flatnonzero(M[taxum_idx])) # all the edits made by this taxum 
-    additions = []
+    edits = np.flatnonzero(M[taxum_idx]) # all the edits made by this taxum
 
     curr = "r0"
     edit_found = True
@@ -44,34 +43,44 @@ def extend_tree_for_taxum(T: nx.DiGraph, M: np.ndarray, charset: Set[int], taxum
                 # traverse edge
                 curr = out_node
                 edit_found = True
-                edits.remove(data["edit"])
+                edits = np.delete(edits, np.where(edits == data["edit"]))
                 break
-    additions = list(edits)
-        
-    for edit in additions:
+    
+    for edit in edits:
         if edit not in charset:
             return False # collision condition
         charset.remove(edit)
-        label = "c" + str(edit + 1)
+        label = "c" + str(char_order[edit] + 1)
         T.add_edge(curr, "i" + str(edit), label=label, edit=edit)
-    if len(additions):
-        T.add_edge("i" + str(additions[-1]), "r" + str(taxum_idx + 1), edit=-1)
+        curr = "i" + str(edit)
+    if len(edits):
+        T.add_edge("i" + str(edits[-1]), "r" + str(taxum_idx + 1), edit=-1)
     else:
         T.add_edge(curr, "r" + str(taxum_idx + 1), edit=-1) # taxa is same as another one
     return True
+
+
+def sort_characters(M: np.array) -> Tuple[np.array, np.array]:
+    """Sorts the columns of matrix M out-of-place such that the sum of the values in each column
+    is descending. Returns both the column-sorted matrix and an array indicating the ordering so that
+    the original matrix may be recovered."""
+    num_edits = M.sum(axis = 0)
+    char_order = num_edits.argsort()[::-1]
+    M = M[:, char_order]
+    return M, char_order
     
 
 def two_state_phylo(M: np.ndarray, draw=False) -> nx.DiGraph:
     """Determines whether matrix M accepts a perfect two-state phylogeny"""
-    num_edits = M.sum(axis = 1)
-    taxa_order = num_edits.argsort() # sets order over rows of M
+    M, char_order = sort_characters(M)
     charset = set(range(len(M[0])))
 
     T = nx.DiGraph()
     T.add_node("r0")
 
-    for taxum_idx in taxa_order:
-        if not extend_tree_for_taxum(T, M, charset, taxum_idx):
+    num_taxa = M.shape[0]
+    for taxum_idx in range(num_taxa):
+        if not extend_tree_for_taxum(T, M, charset, taxum_idx, char_order):
             return None
 
     if draw:
