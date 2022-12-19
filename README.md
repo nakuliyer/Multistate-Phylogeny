@@ -3,7 +3,6 @@
 This is an implementation of an algorithm to solve the 3-state perfect phylogeny problem. In the perfect phylogeny problem, an `n` by `m` matrix, called `M`, with `n` taxa and `m` characters is inputted. The rules in order to verify that the tree exists and the tree is a perfect phylogeny are if `M` has state `s` at taxon `f` and character `c`, then `f` has the state `s` for character `c`. Additionally, every taxon labels one leaf and, starting from the root, every state shift on the edges leads to the taxon with those exact state shifts. The goal is to find a tree such that every edge represents a single character state change and every state change represents a single edge. Specifically, in the two state phylogeny, the input is a matrix with various state changes of either 0 or 1. As shown in the figure below this matrix has 5 taxa (`r1` to `r5`) and 5 characters (`c1` to `c5`):
 
 ![Input Matrix](imgs/input_matrix_example.png)
-Figure 1: Matrix M for Two State Perfect Phylogeny
 
 In order to create this tree, each row of matrix `M` is iteratively considered choosing a root node, and a starting node, where each of the subtrees is built out from the root to the last matching characters. In the figure below, the final tree for this matrix is shown where each edge `c_i` represents `c_i` changing from 0 to 1, which for each edge occurs only once in the whole tree. This tree will be considered a perfect phylogeny if all the rules, as discussed above, have been met. This algorithm can be solved in polynomial time.
 
