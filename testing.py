@@ -1,11 +1,13 @@
 from implementation import *
 import random
+import time
+
 
 def create_2state_base():
     T = nx.DiGraph()
     char_set = set(["c" + str(i) for i in range(1, 3)])
     T.add_node("r0")
-    
+
     if random.choice([True, False]):
         first = char_set.pop()
         T.add_edge("r0", "1", label=first)
@@ -19,34 +21,39 @@ def create_2state_base():
         T.add_edge("r0", "r2", label=second)
     return T
 
+
 def add_char_2state(T: nx.DiGraph, satisfy):
     leaves = [item for item in T.edges().data() if item[1][0] == "r" and item[2]]
     chars = [item for item in T.edges().data() if item[2]]
     new_char = "c" + str(len(chars) + 1)
 
     if satisfy:
-        to_add = leaves[random.randint(0, len(leaves)-1)]
+        to_add = leaves[random.randint(0, len(leaves) - 1)]
         temp = str(len(T.nodes()) + 1)
         T.remove_edge(to_add[0], to_add[1])
         T.add_edge(to_add[0], temp, label=to_add[2]["label"])
         T.add_edge(temp, to_add[1], label=new_char)
     else:
-        r_idx = random.randint(0, len(leaves)-1)
+        r_idx = random.randint(0, len(leaves) - 1)
         start = leaves[r_idx][1]
         end = leaves[r_idx - 1][1]
         T.add_edge(start, end, label=new_char)
 
+
 def add_leaf_2state(T: nx.DiGraph):
     leaves = [item for item in T.edges().data() if item[1][0] == "r"]
-    new_leaf = "r" + str(len(leaves)+1)
-    targets = [item for item in T.edges().data() if item[0][0] != "r" and T.out_degree(item[0]) == 1]
+    new_leaf = "r" + str(len(leaves) + 1)
+    targets = [
+        item
+        for item in T.edges().data()
+        if item[0][0] != "r" and T.out_degree(item[0]) == 1
+    ]
     if not targets:
         return
 
     target = targets[random.randint(0, len(targets) - 1)]
     T.add_edge(target[0], new_leaf)
 
-    
 
 def create_matrix(T: nx.DiGraph, two_state, d):
     paths = []
@@ -60,7 +67,7 @@ def create_matrix(T: nx.DiGraph, two_state, d):
         char_len = len(chars)
     else:
         char_len = len(d)
-    
+
     leaves = [item for item in T.edges().data() if item[1][0] == "r"]
     leaf_len = len(leaves)
 
@@ -68,19 +75,21 @@ def create_matrix(T: nx.DiGraph, two_state, d):
     for path in paths:
         taxa_arr = [0] * char_len
         for i in range(1, len(path)):
-            curr_data = T.get_edge_data(path[i-1], path[i])
+            curr_data = T.get_edge_data(path[i - 1], path[i])
             if curr_data:
                 if two_state:
                     curr_char = curr_data["label"]
                     taxa_arr[int(curr_char[1:]) - 1] = 1
                 else:
                     curr_label = curr_data["label"]
-                    curr_char = curr_label[:curr_label.index(":")]
-                    taxa_arr[int(curr_char[1:]) - 1] = int(curr_label[curr_label.index(":") + 2:])
+                    curr_char = curr_label[: curr_label.index(":")]
+                    taxa_arr[int(curr_char[1:]) - 1] = int(
+                        curr_label[curr_label.index(":") + 2 :]
+                    )
         matrix[int(path[-1][1:]) - 1] = taxa_arr
 
-
     return np.array(matrix)
+
 
 def test_layered_2state(success):
     T = create_2state_base()
@@ -98,14 +107,12 @@ def test_layered_2state(success):
     return T
 
 
-
-
 def create_3state_base():
     T = nx.DiGraph()
     char_set = set(["c" + str(i) for i in range(1, 3)])
     char_dict = {}
     T.add_node("r0")
-    
+
     if random.choice([True, False]):
         first = char_set.pop()
         char_dict[first] = char_dict.get(first, 0) + 1
@@ -123,19 +130,20 @@ def create_3state_base():
         T.add_edge("r0", "r2", label=second + ": " + str(char_dict[second]))
     return T, char_dict
 
+
 def add_char_3state(T: nx.DiGraph, d, satisfy):
     leaves = [item for item in T.edges().data() if item[1][0] == "r" and item[2]]
     new_char = "c" + str(len(d) + 1)
     d[new_char] = d.get(new_char, 0) + 1
 
     if satisfy:
-        to_add = leaves[random.randint(0, len(leaves)-1)]
+        to_add = leaves[random.randint(0, len(leaves) - 1)]
         temp = str(len(T.nodes()) + 1)
         T.remove_edge(to_add[0], to_add[1])
         T.add_edge(to_add[0], temp, label=to_add[2]["label"])
         T.add_edge(temp, to_add[1], label=new_char + ": " + str(d[new_char]))
     else:
-        r_idx = random.randint(0, len(leaves)-1)
+        r_idx = random.randint(0, len(leaves) - 1)
         to_add = leaves[r_idx]
         char, count = random.choice(list(d.items()))
         temp = str(len(T.nodes()) + 1)
@@ -144,7 +152,7 @@ def add_char_3state(T: nx.DiGraph, d, satisfy):
         T.add_edge(temp, to_add[1], label=char + ": " + str(count))
 
         leaves = [item for item in T.edges().data() if item[1][0] == "r" and item[2]]
-        r_idx1 = random.randint(0, len(leaves)-1)
+        r_idx1 = random.randint(0, len(leaves) - 1)
         to_add1 = leaves[r_idx1]
         char, count = random.choice(list(d.items()))
         temp1 = str(len(T.nodes()) + 1)
@@ -153,7 +161,7 @@ def add_char_3state(T: nx.DiGraph, d, satisfy):
         T.add_edge(temp1, to_add1[1], label=char + ": " + str(count))
 
         leaves = [item for item in T.edges().data() if item[1][0] == "r" and item[2]]
-        r_idx2 = random.randint(0, len(leaves)-1)
+        r_idx2 = random.randint(0, len(leaves) - 1)
         to_add2 = leaves[r_idx2]
         char, count = random.choice(list(d.items()))
         temp2 = str(len(T.nodes()) + 1)
@@ -161,16 +169,17 @@ def add_char_3state(T: nx.DiGraph, d, satisfy):
         T.add_edge(to_add2[0], temp2, label=to_add2[2]["label"])
         T.add_edge(temp2, to_add2[1], label=char + ": " + str(count))
 
+
 def change_char_3state(T: nx.DiGraph, d):
     leaves = [item for item in T.edges().data() if item[1][0] == "r" and item[2]]
-    r_idx = random.randint(0, len(leaves)-1)
+    r_idx = random.randint(0, len(leaves) - 1)
     path = nx.shortest_path(T, "r0", leaves[r_idx][1])
     temp = []
     for i in range(1, len(path)):
-        curr_data = T.get_edge_data(path[i-1], path[i])
+        curr_data = T.get_edge_data(path[i - 1], path[i])
         if curr_data:
             curr_label = curr_data["label"]
-            curr_char = curr_label[:curr_label.index(":")]
+            curr_char = curr_label[: curr_label.index(":")]
             temp.append(curr_char)
     for key in temp:
         if d[key] == 1:
@@ -181,17 +190,22 @@ def change_char_3state(T: nx.DiGraph, d):
             T.add_edge(to_add[0], temp1, label=to_add[2]["label"])
             T.add_edge(temp1, to_add[1], label=key + ": " + str(d[key]))
             break
-    
-    
+
+
 def add_leaf_3state(T: nx.DiGraph):
     leaves = [item for item in T.edges().data() if item[1][0] == "r"]
-    new_leaf = "r" + str(len(leaves)+1)
-    targets = [item for item in T.edges().data() if item[0][0] != "r" and T.out_degree(item[0]) == 1]
+    new_leaf = "r" + str(len(leaves) + 1)
+    targets = [
+        item
+        for item in T.edges().data()
+        if item[0][0] != "r" and T.out_degree(item[0]) == 1
+    ]
     if not targets:
         return
 
     target = targets[random.randint(0, len(targets) - 1)]
     T.add_edge(target[0], new_leaf)
+
 
 def test_layered_3state(success, changes):
     T, d = create_3state_base()
@@ -211,28 +225,30 @@ def test_layered_3state(success, changes):
 
 
 num_success = 0
-for i in range(2, 6): # generate various trees between 2-6 iterations of extensions
-    for j in range(25): # test each iteration 25 times
+total = 0
+start = time.time()
+for i in range(2, 6):  # generate various trees between 2 to 5 iterations of extensions
+    for j in range(100):  # test each iteration 25 times
         G, d = test_layered_3state(True, i)
         M = create_matrix(G, False, d)
+        total += 1
         if three_state_phylo(M, False) != None:
-            num_success += 1 
-print(num_success)
+            num_success += 1
+end = time.time()
+elapsed = end - start
+print(num_success, f"out of {total} perfect phylogeny matrices were reconstructible in {elapsed} seconds")
 
 
 num_fail = 0
-for i in range(2, 6): # generate various trees between 2-6 iterations of extensions
-    for j in range(25): # test each iteration 25 times
+total = 0
+start = time.time()
+for i in range(4, 6):  # generate various trees between 4 and 5 iterations of extensions
+    for j in range(25):  # test each iteration 25 times
         G, d = test_layered_3state(False, i)
         M = create_matrix(G, False, d)
+        total += 1
         if three_state_phylo(M, False) == None:
-            num_fail += 1 
-print(num_fail)
-#draw_graph(G)
-#M = create_matrix(G, True, None)
-#two_state_phylo(M, True)
-#draw_graph(G)
-#M = create_matrix(G, False, d)
-#draw_graph(G)
-#print(M)
-#three_state_phylo(M, True)
+            num_fail += 1
+end = time.time()
+elapsed = end - start
+print(num_fail, f"out of {total} non-perfect phylogeny matrices were not reconstructible in {elapsed} seconds")
