@@ -44,4 +44,12 @@ Matrix "sample_three_state_runs/m0.txt" has a perfect phylogeny
 
 ## Testing
 
-First, run all the commands in the "Running" section to set up a virtual environment. Then, `python testing.py` will run the provided test file to randomly generate perfect and potentially imperfect trees.
+First, run all the commands in the "Running" section to set up a virtual environment. Then, `python testing.py` will run the provided test file to randomly generate perfect and potentially imperfect trees. The following is a sample output:
+```
+> python testing.py                            
+400 out of 400 perfect phylogeny matrices were reconstructible in 1.3931279182434082 seconds
+23 out of 50 non-perfect phylogeny matrices were not reconstructible in 31.412002086639404 seconds
+```
+
+# Further Documentation
+Read `project_report.pdf`
